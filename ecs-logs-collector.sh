@@ -221,6 +221,7 @@ collect_brief() {
   get_systemd_slice_info
   get_veth_info
   get_gpu_info
+  get_ssm_logs
 }
 
 enable_debug() {
@@ -543,6 +544,23 @@ get_pkglist() {
       ;;
   esac
 
+  ok
+}
+
+get_ssm_logs() {
+  try "collect SSM agent logs"
+
+  dstdir="${info_system}/ssm_agent_logs"
+  mkdir -p "$dstdir"
+
+  if command -v journalctl >/dev/null; then
+    journalctl -u amazon-ssm-agent > "$dstdir"/journalctl.log
+  fi
+
+  if [ -d /var/log/amazon/ssm ]; then
+    cp -f -r /var/log/amazon/ssm/* "$dstdir"/
+  fi
+  
   ok
 }
 
