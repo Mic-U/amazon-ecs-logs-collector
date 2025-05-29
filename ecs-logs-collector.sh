@@ -557,8 +557,14 @@ get_ssm_logs() {
     journalctl -u amazon-ssm-agent > "$dstdir"/journalctl.log
   fi
 
+  if command -v snap >/dev/null; then
+    snap logs amazon-ssm-agent > "$dstdir"/snap.log
+  fi
+
   if [ -d /var/log/amazon/ssm ]; then
     cp -f -r /var/log/amazon/ssm/* "$dstdir"/
+  else
+    warning "SSM log directory does not exist."
   fi
   
   ok
