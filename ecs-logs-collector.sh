@@ -548,18 +548,27 @@ get_pkglist() {
 }
 
 get_ssm_logs() {
-  try "collect SSM agent logs"
+  try "collect Amazon SSM Agent logs"
 
   dstdir="${info_system}/ssm_agent_logs"
   mkdir -p "$dstdir"
 
   if command -v journalctl >/dev/null; then
-    journalctl -u amazon-ssm-agent > "$dstdir"/journalctl.log
+    systemctl status amazon-ssm-agent >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      journalctl -u amazon-ssm-agent > "$dstdir"/journalctl.log
+    elif command -v snap >/dev/null; then
+      systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+        snap logs amazon-ssm-agent > "$dstdir"/snap-services.log
+      else
+        warning "Amazon SSM Agent is not running."
+      fi
+    else
+      warning "Amazon SSM Agent is not running."
+    fi
   fi
 
-  if command -v snap >/dev/null; then
-    snap logs amazon-ssm-agent > "$dstdir"/snap.log
-  fi
 
   if [ -d /var/log/amazon/ssm ]; then
     cp -f -r /var/log/amazon/ssm/* "$dstdir"/
